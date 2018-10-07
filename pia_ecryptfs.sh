@@ -14,7 +14,8 @@ mkdir /usr/local/bin/pia
 chown root:root /usr/local/bin/pia
 echo "Moving PIA to a new destination"
 mv /home/$linux_username/.pia_manager/ /usr/local/bin/pia/.pia_manager
-ln -s /usr/local/bin/pia/.pia_manager/ /home/'$linux_usermane'/.pia_manager
+echo "Creating link"
+ln -s /usr/local/bin/pia/.pia_manager/ /home/$linux_usermane/.pia_manager
 
 echo "Done!"
 exit
