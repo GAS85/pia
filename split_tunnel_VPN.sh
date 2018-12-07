@@ -21,7 +21,8 @@ apt-get update
 apt-get install openvpn unzip iptables -y
 echo
 echo "Step 2. Create systemd Service for OpenVPN"
-echo "[Unit]
+cat > /etc/systemd/system/openvpn@openvpn.service << EOF
+[Unit]
 # https://gist.github.com/GAS85/4e40ece16ffa748e7138b9aa4c37ca52
 Description=OpenVPN connection to %i
 Documentation=man:openvpn(8)
@@ -46,7 +47,8 @@ DeviceAllow=/dev/null rw
 DeviceAllow=/dev/net/tun rw
 
 [Install]
-WantedBy=multi-user.target" > /etc/systemd/system/openvpn@openvpn.service
+WantedBy=multi-user.target
+EOF
 
 echo "Now enable the openvpn@openvpn.service we just created"
 systemctl enable openvpn@openvpn.service
@@ -60,7 +62,8 @@ echo
 echo "Step 4. Create Modified PIA Configuration File for Split Tunneling"
 echo "Create the OpenVPN configuration file"
 echo "under /etc/openvpn/openvpn.conf"
-echo "client
+cat > /etc/openvpn/openvpn.conf << EOF
+client
 dev tun
 proto udp
 remote czech.privateinternetaccess.com 1198
@@ -88,7 +91,9 @@ route-noexec
 
 #up and down scripts to be executed when VPN starts or stops
 up /etc/openvpn/iptables.sh
-down /etc/openvpn/update-resolv-conf" > /etc/openvpn/openvpn.conf
+down /etc/openvpn/update-resolv-conf
+EOF
+
 echo
 echo "Step 5. Make OpenVPN Auto Login on Service Start"
 # Ask the PIA user for login details
@@ -161,7 +166,8 @@ apt-get install iptables-persistent -y
 echo
 echo "Step 8. iptables Script for vpn User"
 
-echo '#! /bin/bash
+cat > /etc/openvpn/iptables.sh << EOF
+#! /bin/bash
 # Niftiest Software – www.niftiestsoftware.com
 # Modified version by HTPC Guides – www.htpcguides.com
 
@@ -213,14 +219,17 @@ iptables -A INPUT -j DROP
 # Start routing script
 /etc/openvpn/routing.sh
 
-exit 0' > /etc/openvpn/iptables.sh
+exit 0
+EOF
 
 #Make the iptables script executable
 chmod +x /etc/openvpn/iptables.sh
 
 echo
 echo "Step 9. Routing Rules Script for the Marked Packets"
-echo "#! /bin/bash
+
+cat > /etc/openvpn/routing.sh << EOF
+#! /bin/bash
 # Niftiest Software – www.niftiestsoftware.com
 # Modified version by HTPC Guides – www.htpcguides.com
 
@@ -237,7 +246,8 @@ ip route flush cache
 # run update-resolv-conf script to set VPN DNS
 /etc/openvpn/update-resolv-conf
 
-exit 0" > /etc/openvpn/routing.sh
+exit 0
+EOF
 
 # Finally, make the script executable
 chmod +x /etc/openvpn/routing.sh
