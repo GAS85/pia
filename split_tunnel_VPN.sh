@@ -259,9 +259,9 @@ echo "200     vpn" >> /etc/iproute2/rt_tables
 
 echo
 echo "Step 11. Change Reverse Path Filtering"
-echo "net.ipv4.conf.all.rp_filter = 2
-net.ipv4.conf.default.rp_filter = 2
-net.ipv4.conf.eth0.rp_filter = 2" > /etc/sysctl.d/9999-vpn.conf
+echo "net.ipv4.conf.all.rp_filter = 2" > /etc/sysctl.d/9999-vpn.conf
+echo "net.ipv4.conf.default.rp_filter = 2" >> /etc/sysctl.d/9999-vpn.conf
+echo "net.ipv4.conf.eth0.rp_filter = 2" >> /etc/sysctl.d/9999-vpn.conf
 echo Apply new sysctl rules
 sysctl --system
 
