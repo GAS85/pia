@@ -153,13 +153,14 @@ if [ "$corrections" == 1 ]; then
 fi
 
 echo
-echo Flush current iptables rules
+echo "Flush current iptables rules"
 iptables -F
-echo Add rule, which will block vpn user’s access to Internet (except the loopback device). 
+iptables -X
+echo "Add rule, which will block vpn user’s access to Internet (except the loopback device)."
 iptables -A OUTPUT ! -o lo -m owner --uid-owner vpn -j DROP
-echo Install iptables-persistent to save this single rule that will be always applied on each system start.
+echo "Install iptables-persistent to save this single rule that will be always applied on each system start."
 echo
-echo During the install, iptables-persistent will ask you to save current iptables rules to /etc/iptables/rules.v4, accept this with YES.
+echo "During the install, iptables-persistent will ask you to save current iptables rules to /etc/iptables/rules.v4, accept this with YES."
 echo
 apt-get install iptables-persistent -y
 
