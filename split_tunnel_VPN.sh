@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 # By Georgiy Sitnikov.
 #
@@ -8,7 +8,7 @@
 # AS-IS without any warranty
 
 # Check if you are root user, otherwise will not work
-[[ $(id -u) -eq 0 ]] || { echo >&2 "Must be root to run this script."; exit 1; }
+[ "$(id -u)" -eq 0 ] || { echo >&2 "Must be root to run this script."; exit 1; }
 
 # Optinally
 #wget https://swupdate.openvpn.net/repos/repo-public.gpg -O - | apt-key add -
@@ -37,7 +37,7 @@ KillMode=mixed
 Type=forking
 ExecStart=/usr/sbin/openvpn --daemon ovpn-%i --status /run/openvpn/%i.status 10 --cd /etc/openvpn --script-security 2 --config /etc/openvpn/%i.conf --writepid /run/openvpn/%i.pid
 PIDFile=/run/openvpn/%i.pid
-ExecReload=/bin/kill -HUP $MAINPID
+ExecReload=/bin/kill -HUP \$MAINPID
 WorkingDirectory=/etc/openvpn
 Restart=on-failure
 RestartSec=3
@@ -99,12 +99,12 @@ echo "Step 5. Make OpenVPN Auto Login on Service Start"
 # Ask the PIA user for login details
 echo
 echo "Please enter your PIA username and Password"
-read -p 'Username: ' uservar
-read -p 'Password: ' passvar
+read -rp 'Username: ' uservar
+read -rp 'Password: ' passvar
 echo
-echo $uservar > /etc/openvpn/login.txt
-echo $passvar >> /etc/openvpn/login.txt
-echo Thanks you $uservar we now have your PIA login details saved in /etc/openvpn/login.txt
+echo "$uservar" > /etc/openvpn/login.txt
+echo "$passvar" >> /etc/openvpn/login.txt
+echo Thanks you "$uservar" we now have your PIA login details saved in /etc/openvpn/login.txt
 echo
 echo "Step 6. Configure VPN DNS Servers to Stop DNS Leaks"
 sed -i -e "s/# foreign_option_1=\'dhcp-option DNS 193.43.27.132\'/foreign_option_1=\'dhcp-option DNS 209.222.18.222\'/g" /etc/openvpn/update-resolv-conf
@@ -119,13 +119,13 @@ adduser --disabled-login vpn
 echo
 echo "Enter username with the user you would like to add to the vpn group"
 echo "E.g. your regular user: $(grep 1000 /etc/passwd | cut -f1 -d:)"
-read -p 'Username: ' username
-usermod -aG vpn $username
-echo Thanks you, $username added to VPN group.
+read -rp 'Username: ' username
+usermod -aG vpn "$username"
+echo Thanks you, "$username" added to VPN group.
 echo
 echo Group name of your regular user that you would like to add the vpn user to
-read -p 'Group: ' groupname
-usermod -aG $groupname vpn
+read -rp 'Group: ' groupname
+usermod -aG "$groupname" vpn
 echo Thanks you.
 echo
 echo Get Routing Information for the iptables Script
@@ -135,11 +135,11 @@ echo "Again, make sure you are using a static IP on your machine or reserved DHC
 interface=$(ip route list | grep default | cut -f5 -d" ")
 localipaddr=$(ip route get 8.8.8.8 | awk '{print $NF; exit}')
 echo
-echo Local Default interface is $interface
-echo Local IP Address is $localipaddr
+echo Local Default interface is "$interface"
+echo Local IP Address is "$localipaddr"
 
 while true; do
-    read -p "Are listed IP Addr and Interface correct?" yn
+    read -rp "Are listed IP Addr and Interface correct?" yn
     case $yn in
         [Yy]* ) break;;
         [Nn]* ) corrections=1;break;;
@@ -147,9 +147,9 @@ while true; do
     esac
 done
 
-if [ "$corrections" == 1 ]; then
-	read -p 'Please enter correct defailt interface: ' interface
-	read -p 'Please enter correct IP Address: ' localipaddr
+if [ "$corrections" = 1 ]; then
+	read -rp 'Please enter correct defailt interface: ' interface
+	read -rp 'Please enter correct IP Address: ' localipaddr
 fi
 
 echo
@@ -168,7 +168,7 @@ echo
 echo "Step 8. iptables Script for vpn User"
 
 cat > /etc/openvpn/iptables.sh << EOF
-#! /bin/bash
+#! /bin/sh
 # Niftiest Software – www.niftiestsoftware.com
 # Modified version by HTPC Guides – www.htpcguides.com
 
@@ -230,18 +230,18 @@ echo
 echo "Step 9. Routing Rules Script for the Marked Packets"
 
 cat > /etc/openvpn/routing.sh << EOF
-#! /bin/bash
+#! /bin/sh
 # Niftiest Software – www.niftiestsoftware.com
 # Modified version by HTPC Guides – www.htpcguides.com
 
 VPNIF="tun0"
 VPNUSER="vpn"
-GATEWAYIP=$(ifconfig $VPNIF | egrep -o '([0-9]{1,3}\.){3}[0-9]{1,3}' | egrep -v '255|(127\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3})' | tail -n1)
-if [[ `ip rule list | grep -c 0x1` == 0 ]]; then
-ip rule add from all fwmark 0x1 lookup $VPNUSER
+GATEWAYIP=\$(ip addr show \$VPNIF | grep "inet " | awk '{print $2}' | cut -d/ -f1)
+if [ "\$(ip rule list | grep -c 0x1)" = 0 ]; then
+    ip rule add from all fwmark 0x1 lookup \$VPNUSER
 fi
-ip route replace default via $GATEWAYIP table $VPNUSER
-ip route append default via 127.0.0.1 dev lo table $VPNUSER
+ip route replace default via \$GATEWAYIP table \$VPNUSER
+ip route append default via 127.0.0.1 dev lo table \$VPNUSER
 ip route flush cache
 
 # run update-resolv-conf script to set VPN DNS
